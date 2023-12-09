@@ -54,8 +54,7 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case IDC_BUTTON_ADD:
 		{
-			HINSTANCE hInstance;
-			DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DIALOG2), NULL, (DLGPROC)DlgProc2, 0);
+			DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG2), NULL, (DLGPROC)DlgProc2, 0);
 		}
 			break;
 		case IDCANCEL:EndDialog(hwnd, 0);

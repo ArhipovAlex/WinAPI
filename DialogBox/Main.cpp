@@ -1,6 +1,8 @@
 ﻿#include<Windows.h>
 #include"resource.h"
 
+CONST CHAR g_sz_USERNAME_MESSAGE[] = "Введите имя пользователя";
+
 BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, INT nCmdShow)
@@ -22,9 +24,7 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
 		SendMessage(hwnd, WM_SETICON, 0, (LPARAM)hIcon);
 		//Первичная подсказка в Edit_Login
-		CHAR sz_buffer[256] = {"Введите имя пользователя"};
-		HWND hEditLogin = GetDlgItem(hwnd, IDC_EDIT_LOGIN);
-		SendMessage(hEditLogin, WM_SETTEXT, 0, (LPARAM)sz_buffer);
+		SendMessage(GetDlgItem(hwnd,IDC_EDIT_LOGIN), WM_SETTEXT, 0, (LPARAM)g_sz_USERNAME_MESSAGE);
 	}
 		break;
 	case WM_COMMAND:
@@ -35,18 +35,13 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_EDIT_LOGIN:
 		{
 			//извлечем содержимое Edit и проверим на наличие подсказки, и либо ее уберем или если это не подсказка оставим
-			CONST INT SIZE = 256;
-			CHAR sz_buffer[SIZE] = {};
+			CHAR sz_buffer[MAX_PATH] = {};
 			HWND hEditLogin = GetDlgItem(hwnd, IDC_EDIT_LOGIN);
-			SendMessage(hEditLogin, WM_GETTEXT, SIZE, (LPARAM)sz_buffer);
-			if (sz_buffer == "Введите имя пользователя")
-			{
-				SendMessage(hEditLogin, EN_CHANGE, 0, NULL);
-			}
-			else if (sz_buffer == "")
-			{
-				SendMessage(hEditLogin, EN_CHANGE, SIZE, (LPARAM)"Введите имя пользователя");
-			}
+			SendMessage(hEditLogin, WM_GETTEXT, MAX_PATH, (LPARAM)sz_buffer);
+			if (HIWORD(wParam)==EN_SETFOCUS && strcmp(sz_buffer,g_sz_USERNAME_MESSAGE)==0)
+				SendMessage(hEditLogin, WM_SETTEXT, 0, (LPARAM)"");
+			if (HIWORD(wParam) == EN_KILLFOCUS && strlen(sz_buffer) == 0)
+				SendMessage(hEditLogin, WM_SETTEXT, 0, (LPARAM)g_sz_USERNAME_MESSAGE);
 
 		}
 			break;
