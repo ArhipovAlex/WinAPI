@@ -1,7 +1,7 @@
 ﻿#include<Windows.h>
 #include"resource.h"
 
-CONST CHAR g_sz_USERNAME_MESSAGE[] = "Введите имя пользователя";
+CONST CHAR g_sz_LOGIN_INVITE[] = "Введите имя пользователя";
 
 BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -24,7 +24,7 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
 		SendMessage(hwnd, WM_SETICON, 0, (LPARAM)hIcon);
 		//Первичная подсказка в Edit_Login
-		SendMessage(GetDlgItem(hwnd,IDC_EDIT_LOGIN), WM_SETTEXT, 0, (LPARAM)g_sz_USERNAME_MESSAGE);
+		SendMessage(GetDlgItem(hwnd,IDC_EDIT_LOGIN), WM_SETTEXT, 0, (LPARAM)g_sz_LOGIN_INVITE);
 	}
 		break;
 	case WM_COMMAND:
@@ -38,10 +38,10 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			CHAR sz_buffer[MAX_PATH] = {};
 			HWND hEditLogin = GetDlgItem(hwnd, IDC_EDIT_LOGIN);
 			SendMessage(hEditLogin, WM_GETTEXT, MAX_PATH, (LPARAM)sz_buffer);
-			if (HIWORD(wParam)==EN_SETFOCUS && strcmp(sz_buffer,g_sz_USERNAME_MESSAGE)==0)
+			if (HIWORD(wParam)==EN_SETFOCUS && strcmp(sz_buffer,g_sz_LOGIN_INVITE)==0)
 				SendMessage(hEditLogin, WM_SETTEXT, 0, (LPARAM)"");
 			if (HIWORD(wParam) == EN_KILLFOCUS && strlen(sz_buffer) == 0)
-				SendMessage(hEditLogin, WM_SETTEXT, 0, (LPARAM)g_sz_USERNAME_MESSAGE);
+				SendMessage(hEditLogin, WM_SETTEXT, 0, (LPARAM)g_sz_LOGIN_INVITE);
 
 		}
 			break;
