@@ -6,14 +6,13 @@
 #define IDI_ICON1                       103
 #define ID_STATIC_FULLNAME              1001
 #define IDC_EDIT_FULLNAME               1002
-#define IDC_EDIT_CHAR                   1003
+#define IDC_EDIT_DESCRIPTION            1003
 #define IDC_STATIC_CHAR                 1004
 #define IDC_CHECK_ATTENTION             1005
 #define IDC_CHECK_GOOD_UNDERSTANDED     1006
 #define IDC_CHECK_GOOD_CODING           1007
 #define IDC_CHECK_NO_HOME_WORKS         1008
 #define IDC_CHECK_BAD_ATTENDIONS        1009
-#define IDC_STATIC_ADRETATIONS          1010
 #define IDC_STATIC_ADVETATIONS          1010
 
 // Next default values for new objects
