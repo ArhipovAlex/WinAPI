@@ -1,4 +1,7 @@
-﻿#include<Windows.h>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include<Windows.h>
+#include<wingdi.h>
+#include<stdio.h>
 #include"resource.h"
 
 CONST CHAR g_sz_WINDOW_CLASS[] = "My first Window";
@@ -33,18 +36,24 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	{
 		MessageBox(NULL, "Class registration failed", "Error", MB_OK | MB_ICONERROR);
 	}
-
+	HDC hDCScreen = GetDC(NULL);
+	int Horres = GetDeviceCaps(hDCScreen, HORZRES);
+	int Vertres = GetDeviceCaps(hDCScreen, VERTRES);
+	CHAR TitleWindow[] = "";
+	sprintf(TitleWindow, "Size: %ix%i Location: %i;%i", Horres / 8, Vertres / 8, Horres * 3 / 4, Vertres * 3 / 4);
 	//2) Создание окна:
 	HWND hwnd = CreateWindowExA
 	(
 		NULL,//ExStyles
 		g_sz_WINDOW_CLASS,//Class name
-		g_sz_WINDOW_CLASS,//Заголовок окна
+		TitleWindow,//Заголовок окна
 		WS_OVERLAPPEDWINDOW,//Стиль для главного окна:
 							//наличие строки заголовка, кнопки управления 
 							//и масштабирование размеров
-		CW_USEDEFAULT, CW_USEDEFAULT,//положение окна на экране
-		CW_USEDEFAULT, CW_USEDEFAULT,//размер окна
+		//CW_USEDEFAULT, CW_USEDEFAULT,//положение окна на экране
+		Horres /8, Vertres /8,
+		//CW_USEDEFAULT, CW_USEDEFAULT,//размер окна
+		Horres * 3 / 4, Vertres * 3 / 4,
 		NULL,	//родительское окно (у главного нет)
 		NULL,	//для главного окна задает меню,
 				//для дочернего окна ID-ресурса дочернего окна (IDC_BUTTON_COPY, IDC_EDIT...)
