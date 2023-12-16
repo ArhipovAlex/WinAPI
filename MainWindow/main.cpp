@@ -7,6 +7,7 @@
 #include"resource.h"
 
 #pragma comment(lib, "comctl32.lib")
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 CONST CHAR g_sz_WINDOW_CLASS[] = "My first Window";
 
@@ -32,8 +33,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	//wc.hIconSm = LoadIcon(hInstance, IDI_APPLICATION);
 	wc.hIcon = (HICON)LoadImage(hInstance, "icon2.ico", IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);//на панели задач
 	wc.hIconSm = (HICON)LoadImage(hInstance, "icon1.ico", IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);//в строке заголовка окна
-	//wc.hCursor = (HCURSOR)LoadImage(hInstance, "Flame.ani", IMAGE_CURSOR, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);
-	wc.hCursor = LoadCursor(hInstance, MAKEINTRESOURCE(IDC_ARROW));
+	wc.hCursor = (HCURSOR)LoadImage(hInstance, "Flame.ani", IMAGE_CURSOR, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);
+	//wc.hCursor = LoadCursor(hInstance, MAKEINTRESOURCE(IDC_ARROW));
 	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 	//
 	wc.hInstance = hInstance;
@@ -182,7 +183,6 @@ HWND CreateTrackingToolTip(INT toolID, HWND hwnd, LPSTR lpsztext)
 		MessageBox(hwnd, "Tooltip creation failed", "Error", MB_OK | MB_ICONERROR);
 		return NULL;
 	}
-
 	//g_toolItem.cbSize = sizeof(TOOLINFO);
 	//g_toolItem.uFlags = TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
 	//g_toolItem.hwnd = hwnd;
