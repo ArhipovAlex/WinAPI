@@ -2,11 +2,20 @@
 #include<Windows.h>
 #include<wingdi.h>
 #include<stdio.h>
+#include<CommCtrl.h>
+#include<windowsx.h>
 #include"resource.h"
+
+#pragma comment(lib, "comctl32.lib")
 
 CONST CHAR g_sz_WINDOW_CLASS[] = "My first Window";
 
+TOOLINFO g_toolItem;
+HWND g_hwndTrackingTT;
+BOOL g_TrackingMouse=FALSE;
+
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+HWND CreateTrackingToolTip(INT toolID, HWND hwnd, LPSTR lpsztext);
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, INT nCmdShow)
 {
@@ -23,8 +32,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	//wc.hIconSm = LoadIcon(hInstance, IDI_APPLICATION);
 	wc.hIcon = (HICON)LoadImage(hInstance, "icon2.ico", IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);//на панели задач
 	wc.hIconSm = (HICON)LoadImage(hInstance, "icon1.ico", IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);//в строке заголовка окна
-	wc.hCursor = (HCURSOR)LoadImage(hInstance, "Flame.ani", IMAGE_CURSOR, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);
-	//wc.hCursor = LoadCursor(hInstance, MAKEINTRESOURCE(IDC_CURSOR1));
+	//wc.hCursor = (HCURSOR)LoadImage(hInstance, "Flame.ani", IMAGE_CURSOR, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);
+	wc.hCursor = LoadCursor(hInstance, MAKEINTRESOURCE(IDC_ARROW));
 	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 	//
 	wc.hInstance = hInstance;
@@ -85,7 +94,46 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 	case WM_CREATE:
-		break;
+	{
+		InitCommonControls();
+		g_hwndTrackingTT = CreateTrackingToolTip(IDC_TOOLTIP, hwnd, (LPSTR)"MyTooltip");
+	}
+	return TRUE;
+	case WM_MOUSELEAVE:
+		SendMessage(g_hwndTrackingTT,TTM_TRACKACTIVATE,(WPARAM)FALSE,(LPARAM)&g_toolItem);
+		g_TrackingMouse = FALSE;
+		return FALSE;
+	case WM_MOUSEMOVE:
+		static INT oldX, oldY;
+		INT newX, newY;
+		if (!g_TrackingMouse)
+		{
+			TRACKMOUSEEVENT tme = { sizeof(TRACKMOUSEEVENT) };
+			tme.hwndTrack = hwnd;
+			tme.dwFlags = TME_LEAVE;
+			TrackMouseEvent(&tme);
+			SendMessage(g_hwndTrackingTT, TTM_TRACKACTIVATE, (WPARAM)TRUE, (LPARAM)&g_toolItem);
+			g_TrackingMouse = TRUE;
+		}
+		//#include<windowsx.h>
+		newX = GET_X_LPARAM(lParam);
+		newY = GET_Y_LPARAM(lParam);
+		if ((newX != oldX) || (newY != oldY))
+		{
+			oldX = newX;
+			oldY = newY;
+
+			CHAR coords[12]{};
+			sprintf(coords,"%ix%i", newX, newY);
+
+			g_toolItem.lpszText = coords;
+			SendMessage(g_hwndTrackingTT, TTM_SETTOOLINFO, 0, (LPARAM)&g_toolItem);
+			
+			POINT pt = { newX, newY };
+			ClientToScreen(hwnd, &pt);
+			SendMessage(g_hwndTrackingTT, TTM_TRACKPOSITION, 0, (LPARAM)MAKELONG(pt.x + 10, pt.y - 20));
+		}
+		return FALSE;
 	case WM_SIZE:
 	case WM_MOVE:
 	{
@@ -99,8 +147,6 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)sz_title);
 	}	
 		break;
-	case WM_PAINT:
-		break;
 	case WM_COMMAND:
 		break;
 	case WM_DESTROY:PostQuitMessage(0); break;
@@ -108,4 +154,36 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	default:		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	return 0;
+}
+
+HWND CreateTrackingToolTip(INT toolID, HWND hwnd, LPSTR lpsztext)
+{
+	HWND hwndTT = CreateWindowEx(
+		WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
+		WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		hwnd,
+		NULL,
+		GetModuleHandle(NULL),
+		NULL
+	);
+	if (hwndTT == NULL)
+	{
+		MessageBox(hwnd, "Tooltip creation failed", "Error", MB_OK | MB_ICONERROR);
+		return NULL;
+	}
+
+	g_toolItem.cbSize = sizeof(TOOLINFO);
+	g_toolItem.uFlags = TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
+	g_toolItem.hwnd = hwnd;
+	g_toolItem.hinst = GetModuleHandle(NULL);
+	g_toolItem.lpszText = lpsztext;
+	g_toolItem.uId = (UINT_PTR)hwnd;
+
+	GetClientRect(hwnd, &g_toolItem.rect);
+	
+	//Associate the tooltip with the tool window
+	SendMessage(hwndTT, TTM_ADDTOOL,0,(LPARAM)(LPTOOLINFO)&g_toolItem);
+	return hwndTT;
 }
