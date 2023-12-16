@@ -132,6 +132,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			POINT pt = { newX, newY };
 			ClientToScreen(hwnd, &pt);
 			SendMessage(g_hwndTrackingTT, TTM_TRACKPOSITION, 0, (LPARAM)MAKELONG(pt.x + 10, pt.y - 20));
+			//SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)coords);
 		}
 		return FALSE;
 	case WM_SIZE:
@@ -159,14 +160,12 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 HWND CreateTrackingToolTip(INT toolID, HWND hwnd, LPSTR lpsztext)
 {
 	HWND hwndTT = CreateWindowEx(
-		WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
-		WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+		NULL, TOOLTIPS_CLASS, NULL,
+		WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON,
 		CW_USEDEFAULT, CW_USEDEFAULT,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		hwnd,
-		NULL,
-		GetModuleHandle(NULL),
-		NULL
+		hwnd, NULL,
+		GetModuleHandle(NULL), NULL
 	);
 	if (hwndTT == NULL)
 	{
@@ -174,12 +173,18 @@ HWND CreateTrackingToolTip(INT toolID, HWND hwnd, LPSTR lpsztext)
 		return NULL;
 	}
 
-	g_toolItem.cbSize = sizeof(TOOLINFO);
-	g_toolItem.uFlags = TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
-	g_toolItem.hwnd = hwnd;
-	g_toolItem.hinst = GetModuleHandle(NULL);
-	g_toolItem.lpszText = lpsztext;
-	g_toolItem.uId = (UINT_PTR)hwnd;
+	//g_toolItem.cbSize = sizeof(TOOLINFO);
+	//g_toolItem.uFlags = TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
+	//g_toolItem.hwnd = hwnd;
+	//g_toolItem.hinst = GetModuleHandle(NULL);
+	//g_toolItem.lpszText = lpsztext;
+	//g_toolItem.uId = (UINT_PTR)hwnd;
+	TOOLINFO toolInfo = { 0 };
+	toolInfo.cbSize = sizeof(toolInfo);
+	toolInfo.hwnd = hwnd;
+	toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+	toolInfo.uId = (UINT_PTR)hwnd;
+	toolInfo.lpszText = lpsztext;
 
 	GetClientRect(hwnd, &g_toolItem.rect);
 	
