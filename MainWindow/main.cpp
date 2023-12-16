@@ -159,6 +159,16 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 HWND CreateTrackingToolTip(INT toolID, HWND hwnd, LPSTR lpsztext)
 {
+	/*HWND hwndTT = CreateWindowEx(
+		WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
+		WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		hwnd,
+		NULL,
+		GetModuleHandle(NULL),
+		NULL
+	);*/
 	HWND hwndTT = CreateWindowEx(
 		NULL, TOOLTIPS_CLASS, NULL,
 		WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON,
