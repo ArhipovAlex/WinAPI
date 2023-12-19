@@ -1,4 +1,6 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include<Windows.h>
+#include<stdio.h>
 #include"resource.h"
 
 CONST CHAR g_sz_CLASSNAME[] = "MyCacl";
@@ -137,6 +139,119 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 		break;
 	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case IDC_BUTTON_0:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "0");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_1:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "1");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_2:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "2");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_3:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "3");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_4:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "4");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_5:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "5");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_6:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "6");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_7:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "7");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_8:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "8");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_9:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, "9");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		case IDC_BUTTON_POINT:
+		{
+			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+			CHAR sz_buffer1[MAX_PATH]{};
+			CHAR sz_buffer2[MAX_PATH]{};
+			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
+			sprintf(sz_buffer2, "%s%s", sz_buffer1, ".");
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+		}
+		break;
+		}
 		break;
 	case WM_DESTROY:PostQuitMessage(0); break;
 	case WM_CLOSE: DestroyWindow(hwnd);

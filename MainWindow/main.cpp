@@ -86,55 +86,86 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
+		IsDialogMessage(hwnd, &msg);
 	}
 	return msg.wParam;
 }
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static BOOL b_showCoords = FALSE;
 	switch (uMsg)
 	{
 	case WM_CREATE:
 	{
 		InitCommonControls();
 		g_hwndTrackingTT = CreateTrackingToolTip(IDC_TOOLTIP, hwnd, (LPSTR)"MyTooltip");
+		CreateWindowEx
+		(
+			NULL, "Button", "Показать координаты мыши",
+			WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
+			10, 10,
+			250, 20,
+			hwnd, (HMENU)IDC_CHECKBOX_MOUSE_COORDS,
+			GetModuleHandle(NULL),
+			NULL
+		);
+		INT parts[2] = { 64,-1 };
+		HWND hStatus = CreateWindowEx
+		(
+			NULL,
+			STATUSCLASSNAME,
+			"Status bar",
+			WS_CHILD | WS_VISIBLE,
+			0, 0, 0, 0,
+			hwnd,
+			(HMENU)IDM_STATUS,
+			GetModuleHandle(NULL),
+			NULL
+		);
+		SendMessage(hStatus, SB_SETPARTS, 2, (LPARAM)parts);
 	}
 	return TRUE;
 	case WM_MOUSELEAVE:
-		SendMessage(g_hwndTrackingTT,TTM_TRACKACTIVATE,(WPARAM)FALSE,(LPARAM)&g_toolItem);
+		SendMessage(g_hwndTrackingTT, TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)&g_toolItem);
 		g_TrackingMouse = FALSE;
 		return FALSE;
 	case WM_MOUSEMOVE:
-		static INT oldX, oldY;
-		INT newX, newY;
-		if (!g_TrackingMouse)
-		{
-			TRACKMOUSEEVENT tme = { sizeof(TRACKMOUSEEVENT) };
-			tme.hwndTrack = hwnd;
-			tme.dwFlags = TME_LEAVE;
-			TrackMouseEvent(&tme);
-			SendMessage(g_hwndTrackingTT, TTM_TRACKACTIVATE, (WPARAM)TRUE, (LPARAM)&g_toolItem);
-			g_TrackingMouse = TRUE;
-		}
-		//#include<windowsx.h>
-		newX = GET_X_LPARAM(lParam);
-		newY = GET_Y_LPARAM(lParam);
-		if ((newX != oldX) || (newY != oldY))
-		{
-			oldX = newX;
-			oldY = newY;
+	{
+	static INT oldX, oldY;
+	INT newX, newY;
+	if (!g_TrackingMouse)
+	{
+		TRACKMOUSEEVENT tme = { sizeof(TRACKMOUSEEVENT) };
+		tme.hwndTrack = hwnd;
+		tme.dwFlags = TME_LEAVE;
+		TrackMouseEvent(&tme);
+		if (b_showCoords)SendMessage(g_hwndTrackingTT, TTM_TRACKACTIVATE, (WPARAM)TRUE, (LPARAM)&g_toolItem);
+		g_TrackingMouse = TRUE;
+	}
+	//#include<windowsx.h>
+	newX = GET_X_LPARAM(lParam);
+	newY = GET_Y_LPARAM(lParam);
+	if ((newX != oldX) || (newY != oldY))
+	{
+		oldX = newX;
+		oldY = newY;
 
-			CHAR coords[12]{};
-			sprintf(coords,"%ix%i", newX, newY);
+		CHAR coords[12]{};
+		sprintf(coords, "%ix%i", newX, newY);
 
-			g_toolItem.lpszText = coords;
-			SendMessage(g_hwndTrackingTT, TTM_SETTOOLINFO, 0, (LPARAM)&g_toolItem);
-			
-			POINT pt = { newX, newY };
-			ClientToScreen(hwnd, &pt);
-			SendMessage(g_hwndTrackingTT, TTM_TRACKPOSITION, 0, (LPARAM)MAKELONG(pt.x + 10, pt.y - 20));
-			//SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)coords);
-		}
+		g_toolItem.lpszText = coords;
+		SendMessage(g_hwndTrackingTT, TTM_SETTOOLINFO, 0, (LPARAM)&g_toolItem);
+
+		POINT pt = { newX, newY };
+		ClientToScreen(hwnd, &pt);
+		SendMessage(g_hwndTrackingTT, TTM_TRACKPOSITION, 0, (LPARAM)MAKELONG(pt.x + 10, pt.y - 20));
+		//SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)coords);
+	}
+	CHAR sz_status[256]{};
+	sprintf(sz_status, "Mouse position: %ix%i", oldX, oldY);
+	SendMessage(GetDlgItem(hwnd, IDM_STATUS), SB_SETTEXT, 1, (LPARAM)sz_status);
+	}
 		return FALSE;
 	case WM_SIZE:
 	case WM_MOVE:
@@ -147,12 +178,32 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			rect.left, rect.top,
 			rect.right-rect.left,rect.bottom-rect.top);
 		SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)sz_title);
+		//RECT rect;
+		//GetClientRect(hwnd, &rect);
+		SetWindowPos(GetDlgItem(hwnd, IDM_STATUS), NULL, 0, 0, 0, 0, SWP_NOMOVE);
+		UpdateWindow(hwnd);
 	}	
 		break;
 	case WM_COMMAND:
+	{
+		switch (LOWORD(wParam))
+		{
+		case IDC_CHECKBOX_MOUSE_COORDS:
+			if (SendMessage(GetDlgItem(hwnd,IDC_CHECKBOX_MOUSE_COORDS), BM_GETCHECK, 0, 0) == BST_CHECKED)
+				b_showCoords = TRUE;
+			else b_showCoords = FALSE;
+			break;
+		}
+	}
 		break;
 	case WM_DESTROY:PostQuitMessage(0); break;
-	case WM_CLOSE:  DestroyWindow(hwnd); break;
+	case WM_CLOSE:  
+		switch (MessageBox(hwnd,"Вы действительно хотите закрыть окно?","Вопрос",MB_YESNO|MB_ICONQUESTION))
+		{
+		case IDYES:DestroyWindow(hwnd);
+		case IDNO:break;
+		}
+		break;
 	default:		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	return 0;

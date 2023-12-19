@@ -4,6 +4,8 @@
 //
 #define IDC_CURSOR1                     101
 #define IDC_TOOLTIP						1000
+#define IDC_CHECKBOX_MOUSE_COORDS		1001
+#define IDM_STATUS						1002
 
 // Next default values for new objects
 // 
