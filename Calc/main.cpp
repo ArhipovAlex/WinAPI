@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include<Windows.h>
+#include<iostream>
 #include<stdio.h>
 #include"resource.h"
 
@@ -9,10 +10,14 @@ CONST INT g_i_START_Y = 10;
 CONST INT g_i_INTERVAL = 5;
 CONST INT g_i_BUTTON_SIZE = 50;
 CONST INT g_i_BUTTON_DOUBLE_SIZE = g_i_BUTTON_SIZE * 2 + g_i_INTERVAL;
-CONST INT g_i_DISPLAY_WIDTH = (g_i_BUTTON_SIZE + g_i_INTERVAL)*5;
+CONST INT g_i_DISPLAY_WIDTH = (g_i_BUTTON_SIZE + g_i_INTERVAL)*5-g_i_INTERVAL;
 CONST INT g_i_DISPLAY_HEIGHT = 22;
 CONST INT g_i_BUTTON_START_X = g_i_START_X;
 CONST INT g_i_BUTTON_START_Y = g_i_START_Y+g_i_DISPLAY_HEIGHT + g_i_INTERVAL;
+CONST INT g_i_WINDOW_WIDTH = g_i_DISPLAY_WIDTH + g_i_START_X * 2+16;
+CONST INT g_i_WINDOW_HEIGHT = g_i_DISPLAY_HEIGHT + g_i_START_Y * 2 + (g_i_BUTTON_SIZE + g_i_INTERVAL) * 4+42;
+
+CONST CHAR* g_sz_arr_OPERATIONS[] = {"+","-","*","/"};
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -49,9 +54,10 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 		NULL,							//ExStyles
 		g_sz_CLASSNAME,					//Class name
 		g_sz_CLASSNAME,					//Window name
-		WS_OVERLAPPEDWINDOW,			//Window styles
+		WS_OVERLAPPEDWINDOW^WS_THICKFRAME^WS_MAXIMIZEBOX,//Window styles ^-XOR исключение
 		CW_USEDEFAULT, CW_USEDEFAULT,	//Position
-		CW_USEDEFAULT, CW_USEDEFAULT,	//Size
+		//CW_USEDEFAULT, CW_USEDEFAULT,
+		g_i_WINDOW_WIDTH, g_i_WINDOW_HEIGHT,//Size
 		NULL,							//Parent window
 		NULL,							//Menu
 		hInstance,
@@ -76,7 +82,9 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 }
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
-{
+{		
+	CONST INT i_DISPLAY_BUFFER_SIZE = 256;
+	static CHAR sz_display[i_DISPLAY_BUFFER_SIZE]{};
 	switch (uMsg)
 	{
 	case WM_CREATE:
@@ -106,7 +114,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					g_i_BUTTON_START_Y+(g_i_BUTTON_SIZE+g_i_INTERVAL)*(3-i/3-1),//Y Position
 					g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
 					hwnd,
-					(HMENU)(IDC_BUTTON_0+i+j),
+					(HMENU)(IDC_BUTTON_1+i+j),
 					GetModuleHandle(NULL),
 					NULL
 				);
@@ -136,122 +144,81 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetModuleHandle(NULL),
 			NULL
 		);
+		//Operations
+		for (int i = 0; i < 4; i++)
+		{
+			CreateWindowEx
+			(
+				NULL,
+				"Button",
+				g_sz_arr_OPERATIONS[3-i],
+				WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+				g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*3,
+				g_i_BUTTON_START_Y+(g_i_BUTTON_SIZE+g_i_INTERVAL)*i,
+				g_i_BUTTON_SIZE,
+				g_i_BUTTON_SIZE,
+				hwnd,
+				(HMENU)(IDC_BUTTON_PLUS+i),
+				GetModuleHandle(NULL),
+				NULL
+			);
+		}
+		CreateWindowEx
+		(
+			NULL,
+			"Button",
+			"<-",
+			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+			g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*4,
+			g_i_BUTTON_START_Y,
+			g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
+			hwnd,
+			(HMENU)IDC_BUTTON_BSP,
+			GetModuleHandle(NULL),
+			NULL
+		);
+		CreateWindowEx
+		(
+			NULL,
+			"Button",
+			"C",
+			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+			g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*4,
+			g_i_BUTTON_START_Y+ g_i_BUTTON_SIZE + g_i_INTERVAL,
+			g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
+			hwnd,
+			(HMENU)IDC_BUTTON_CLEAR,
+			GetModuleHandle(NULL),
+			NULL
+		);
+		CreateWindowEx
+		(
+			NULL,
+			"Button",
+			"=",
+			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+			g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*4,
+			g_i_BUTTON_START_Y + (g_i_BUTTON_SIZE + g_i_INTERVAL)*2,
+			g_i_BUTTON_SIZE,g_i_BUTTON_DOUBLE_SIZE,
+			hwnd,
+			(HMENU)IDC_BUTTON_EQUAR,
+			GetModuleHandle(NULL),
+			NULL
+		);
 	}
 		break;
 	case WM_COMMAND:
-		switch (LOWORD(wParam))
+	{
+		HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+		SendMessage(hEdit, WM_GETTEXT, i_DISPLAY_BUFFER_SIZE, (LPARAM)sz_display);
+		CHAR sz_symbol[2]{};
+		if (LOWORD(wParam) >= IDC_BUTTON_0 && LOWORD(wParam) <= IDC_BUTTON_9)
 		{
-		case IDC_BUTTON_0:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "0");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
+			sz_symbol[0] = LOWORD(wParam) - IDC_BUTTON_0 + 48;
+			strcat(sz_display, sz_symbol);
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_display);
 		}
-		break;
-		case IDC_BUTTON_1:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "1");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_2:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "2");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_3:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "3");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_4:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "4");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_5:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "5");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_6:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "6");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_7:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "7");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_8:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "8");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_9:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, "9");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		case IDC_BUTTON_POINT:
-		{
-			HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
-			CHAR sz_buffer1[MAX_PATH]{};
-			CHAR sz_buffer2[MAX_PATH]{};
-			SendMessage(hEdit, WM_GETTEXT, 0, (LPARAM)sz_buffer1);
-			sprintf(sz_buffer2, "%s%s", sz_buffer1, ".");
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_buffer2);
-		}
-		break;
-		}
+	}
 		break;
 	case WM_DESTROY:PostQuitMessage(0); break;
 	case WM_CLOSE: DestroyWindow(hwnd);
