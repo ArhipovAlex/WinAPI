@@ -20,6 +20,7 @@ CONST INT g_i_WINDOW_HEIGHT = g_i_DISPLAY_HEIGHT + g_i_START_Y * 2 + (g_i_BUTTON
 CONST CHAR* g_sz_arr_OPERATIONS[] = {"+","-","*","/"};
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+DOUBLE Accounting(double d_char_A, double d_char_B, CHAR action[1]);
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, INT nCmdShow)
 {
@@ -85,6 +86,9 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {		
 	CONST INT i_DISPLAY_BUFFER_SIZE = 256;
 	static CHAR sz_display[i_DISPLAY_BUFFER_SIZE]{};
+	static BOOL b_is_double = FALSE;//наличие разделителя целой и дробной в строке ввода
+	static DOUBLE d_answer = 0;
+	static CHAR sz_action;//символ математического действия
 	switch (uMsg)
 	{
 	case WM_CREATE:
@@ -218,6 +222,59 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			strcat(sz_display, sz_symbol);
 			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_display);
 		}
+		if (LOWORD(wParam) == IDC_BUTTON_POINT && !(b_is_double))
+		{
+			if (strlen(sz_display) == 0)SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)strcat(sz_display, "0"));
+			sz_symbol[0] = 46;
+			strcat(sz_display, sz_symbol);
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_display);
+			b_is_double = TRUE;
+		}
+		if (LOWORD(wParam) == IDC_BUTTON_CLEAR)
+		{
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
+			b_is_double = FALSE;
+		}
+		if (LOWORD(wParam) == IDC_BUTTON_BSP)
+		{
+			sz_symbol[0] = sz_display[strlen(sz_display)-1];
+			if(sz_symbol[0] == 46)b_is_double = FALSE;
+			sz_display[strlen(sz_display) - 1] = 0;
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_display);
+		}
+		if (LOWORD(wParam) == IDC_BUTTON_PLUS && strlen(sz_display) == 0)
+		{
+			sz_action = 43;
+			d_answer = atof(sz_display);
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
+			b_is_double = FALSE;
+		}
+		if (LOWORD(wParam) == IDC_BUTTON_MINUS && strlen(sz_display) == 0)
+		{
+			sz_action = 45;
+			d_answer = atof(sz_display);
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
+			b_is_double = FALSE;
+		}
+		if (LOWORD(wParam) == IDC_BUTTON_ASTER && strlen(sz_display) == 0)
+		{
+			sz_action = 42;
+			d_answer = atof(sz_display);
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
+			b_is_double = FALSE;
+		}
+		if (LOWORD(wParam) == IDC_BUTTON_SLASH && strlen(sz_display) == 0)
+		{
+			sz_action = 47;
+			d_answer = atof(sz_display);
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
+			b_is_double = FALSE;
+		}
+		if (LOWORD(wParam) == IDC_BUTTON_EQUAR && d_answer != 0)
+		{
+			d_answer = Accounting(d_answer, atof(sz_display),sz_action);
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)d_answer);
+		}
 	}
 		break;
 	case WM_DESTROY:PostQuitMessage(0); break;
@@ -225,4 +282,28 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	return FALSE;
+}
+
+DOUBLE Accounting(double d_char_A, double d_char_B, CHAR action)
+{
+	switch (action)
+	{
+	case 43://"+"
+	{
+		d_char_A += d_char_B;
+	}
+	case 42://"*"
+	{
+		d_char_A *= d_char_B;
+	}
+	case 45://"-"
+	{
+		d_char_A -= d_char_B;
+	}
+	case 47://"/"
+	{
+		d_char_A /= d_char_B;
+	}
+	}
+	return d_char_A;
 }
