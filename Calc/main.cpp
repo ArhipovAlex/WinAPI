@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+п»ї#define _CRT_SECURE_NO_WARNINGS
 #include<Windows.h>
 #include<iostream>
 #include<stdio.h>
@@ -20,11 +20,10 @@ CONST INT g_i_WINDOW_HEIGHT = g_i_DISPLAY_HEIGHT + g_i_START_Y * 2 + (g_i_BUTTON
 CONST CHAR* g_sz_arr_OPERATIONS[] = {"+","-","*","/"};
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-DOUBLE Accounting(double d_char_A, double d_char_B, CHAR action[1]);
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, INT nCmdShow)
 {
-	//1) Регистрация класса Window:
+	//1) Р РµРіРёСЃС‚СЂР°С†РёСЏ РєР»Р°СЃСЃР° Window:
 	WNDCLASSEX wc;
 	ZeroMemory(&wc, sizeof(wc));
 	wc.cbSize = sizeof(wc);
@@ -49,13 +48,13 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 		MessageBox(NULL, "Class registration failed", "Error", MB_OK | MB_ICONERROR);
 		return 0;
 	}
-	//2) Создать Window:
+	//2) РЎРѕР·РґР°С‚СЊ Window:
 	HWND hwnd = CreateWindowEx
 	(
 		NULL,							//ExStyles
 		g_sz_CLASSNAME,					//Class name
 		g_sz_CLASSNAME,					//Window name
-		WS_OVERLAPPEDWINDOW^WS_THICKFRAME^WS_MAXIMIZEBOX,//Window styles ^-XOR исключение
+		WS_OVERLAPPEDWINDOW^WS_THICKFRAME^WS_MAXIMIZEBOX,//Window styles ^-XOR РёСЃРєР»СЋС‡РµРЅРёРµ
 		CW_USEDEFAULT, CW_USEDEFAULT,	//Position
 		//CW_USEDEFAULT, CW_USEDEFAULT,
 		g_i_WINDOW_WIDTH, g_i_WINDOW_HEIGHT,//Size
@@ -72,7 +71,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
 
-	//3) Запустить цикл сообщений:
+	//3) Р—Р°РїСѓСЃС‚РёС‚СЊ С†РёРєР» СЃРѕРѕР±С‰РµРЅРёР№:
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
@@ -86,9 +85,11 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {		
 	CONST INT i_DISPLAY_BUFFER_SIZE = 256;
 	static CHAR sz_display[i_DISPLAY_BUFFER_SIZE]{};
-	static BOOL b_is_double = FALSE;//наличие разделителя целой и дробной в строке ввода
-	static DOUBLE d_answer = 0;
-	static CHAR sz_action[1];//символ математического действия
+	static DOUBLE a=0,b=0;
+	static INT operation;
+	static BOOL input = FALSE;
+	static BOOL operation_input = FALSE;
+	static BOOL in_default_state = TRUE;
 	switch (uMsg)
 	{
 	case WM_CREATE:
@@ -162,7 +163,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				g_i_BUTTON_SIZE,
 				g_i_BUTTON_SIZE,
 				hwnd,
-				(HMENU)(IDC_BUTTON_PLUS+i),
+				(HMENU)(IDC_BUTTON_SLASH-i),
 				GetModuleHandle(NULL),
 				NULL
 			);
@@ -216,64 +217,68 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
 		SendMessage(hEdit, WM_GETTEXT, i_DISPLAY_BUFFER_SIZE, (LPARAM)sz_display);
 		CHAR sz_symbol[2]{};
-		if (LOWORD(wParam) >= IDC_BUTTON_0 && LOWORD(wParam) <= IDC_BUTTON_9)
+		if (LOWORD(wParam) >= IDC_BUTTON_0 && LOWORD(wParam) <= IDC_BUTTON_POINT)
 		{
+			if (input==FALSE)SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
 			sz_symbol[0] = LOWORD(wParam) - IDC_BUTTON_0 + 48;
+			if (LOWORD(wParam) == IDC_BUTTON_POINT)
+			{
+				if (strchr(sz_display, '.'))break;
+				sz_symbol[0] = '.';
+			}
 			strcat(sz_display, sz_symbol);
 			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_display);
+			input = TRUE;
 		}
-		if (LOWORD(wParam) == IDC_BUTTON_POINT && !(b_is_double))
+		if (LOWORD(wParam) >= IDC_BUTTON_PLUS && LOWORD(wParam) <= IDC_BUTTON_SLASH)
 		{
-			if (strlen(sz_display) == 0)SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)strcat(sz_display, "0"));
-			sz_symbol[0] = 46;
-			strcat(sz_display, sz_symbol);
+			SendMessage(hEdit, WM_GETTEXT, i_DISPLAY_BUFFER_SIZE, (LPARAM)sz_display);
+			if (input)
+			{
+				b = atof(sz_display);
+				input = FALSE;
+			}
+			if (in_default_state)
+			{
+				a = b;
+				in_default_state = FALSE;
+			}
+			if(input && operation_input)SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_EQUAR), 0);
+			input = FALSE;
+			operation = LOWORD(wParam);
+			operation_input = TRUE;
+		}
+		if (LOWORD(wParam) == IDC_BUTTON_EQUAR)
+		{
+			SendMessage(hEdit, WM_GETTEXT, i_DISPLAY_BUFFER_SIZE, (LPARAM)sz_display);
+			if (input)b = atof(sz_display);
+			input = FALSE;
+			switch (operation)
+			{
+			case IDC_BUTTON_PLUS: a += b; break;
+			case IDC_BUTTON_MINUS:a -= b; break;
+			case IDC_BUTTON_ASTER:a *= b; break;
+			case IDC_BUTTON_SLASH:a /= b; break;
+			}
+			operation_input = FALSE;
+			sprintf(sz_display, "%g", a);
 			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_display);
-			b_is_double = TRUE;
 		}
 		if (LOWORD(wParam) == IDC_BUTTON_CLEAR)
 		{
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
-			b_is_double = FALSE;
+			sz_display[0] = 0;
+			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_display);
+			a = b = 0;
+			operation = 0;
+			input = FALSE;
+			operation_input = FALSE;
+			in_default_state = TRUE;
 		}
 		if (LOWORD(wParam) == IDC_BUTTON_BSP)
 		{
 			sz_symbol[0] = sz_display[strlen(sz_display)-1];
-			if(sz_symbol[0] == 46)b_is_double = FALSE;
 			sz_display[strlen(sz_display) - 1] = 0;
 			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)sz_display);
-		}
-		if (LOWORD(wParam) == IDC_BUTTON_PLUS && strlen(sz_display) == 0)
-		{
-			sz_action[1] = 43;
-			d_answer = atof(sz_display);
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
-			b_is_double = FALSE;
-		}
-		if (LOWORD(wParam) == IDC_BUTTON_MINUS && strlen(sz_display) == 0)
-		{
-			sz_action[1] = 45;
-			d_answer = atof(sz_display);
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
-			b_is_double = FALSE;
-		}
-		if (LOWORD(wParam) == IDC_BUTTON_ASTER && strlen(sz_display) == 0)
-		{
-			sz_action[1] = 42;
-			d_answer = atof(sz_display);
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
-			b_is_double = FALSE;
-		}
-		if (LOWORD(wParam) == IDC_BUTTON_SLASH && strlen(sz_display) == 0)
-		{
-			sz_action[1] = 47;
-			d_answer = atof(sz_display);
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
-			b_is_double = FALSE;
-		}
-		if (LOWORD(wParam) == IDC_BUTTON_EQUAR && d_answer != 0)
-		{
-			d_answer = Accounting(d_answer, atof(sz_display),sz_action);
-			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)d_answer);
 		}
 	}
 		break;
@@ -282,32 +287,4 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	return FALSE;
-}
-
-DOUBLE Accounting(double d_char_A, double d_char_B, CHAR action[])
-{
-	switch (action[0])
-	{
-	case 43://"+"
-	{
-		d_char_A += d_char_B;
-		break;
-	}
-	case 42://"*"
-	{
-		d_char_A *= d_char_B;
-		break;
-	}
-	case 45://"-"
-	{
-		d_char_A -= d_char_B;
-		break;
-	}
-	case 47://"/"
-	{
-		d_char_A /= d_char_B;
-		break;
-	}
-	}
-	return d_char_A;
 }
