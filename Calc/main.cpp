@@ -88,7 +88,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static CHAR sz_display[i_DISPLAY_BUFFER_SIZE]{};
 	static BOOL b_is_double = FALSE;//наличие разделителя целой и дробной в строке ввода
 	static DOUBLE d_answer = 0;
-	static CHAR sz_action;//символ математического действия
+	static CHAR sz_action[1];//символ математического действия
 	switch (uMsg)
 	{
 	case WM_CREATE:
@@ -244,28 +244,28 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		if (LOWORD(wParam) == IDC_BUTTON_PLUS && strlen(sz_display) == 0)
 		{
-			sz_action = 43;
+			sz_action[1] = 43;
 			d_answer = atof(sz_display);
 			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
 			b_is_double = FALSE;
 		}
 		if (LOWORD(wParam) == IDC_BUTTON_MINUS && strlen(sz_display) == 0)
 		{
-			sz_action = 45;
+			sz_action[1] = 45;
 			d_answer = atof(sz_display);
 			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
 			b_is_double = FALSE;
 		}
 		if (LOWORD(wParam) == IDC_BUTTON_ASTER && strlen(sz_display) == 0)
 		{
-			sz_action = 42;
+			sz_action[1] = 42;
 			d_answer = atof(sz_display);
 			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
 			b_is_double = FALSE;
 		}
 		if (LOWORD(wParam) == IDC_BUTTON_SLASH && strlen(sz_display) == 0)
 		{
-			sz_action = 47;
+			sz_action[1] = 47;
 			d_answer = atof(sz_display);
 			SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)"");
 			b_is_double = FALSE;
@@ -284,25 +284,29 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 }
 
-DOUBLE Accounting(double d_char_A, double d_char_B, CHAR action)
+DOUBLE Accounting(double d_char_A, double d_char_B, CHAR action[])
 {
-	switch (action)
+	switch (action[0])
 	{
 	case 43://"+"
 	{
 		d_char_A += d_char_B;
+		break;
 	}
 	case 42://"*"
 	{
 		d_char_A *= d_char_B;
+		break;
 	}
 	case 45://"-"
 	{
 		d_char_A -= d_char_B;
+		break;
 	}
 	case 47://"/"
 	{
 		d_char_A /= d_char_B;
+		break;
 	}
 	}
 	return d_char_A;
