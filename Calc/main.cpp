@@ -18,6 +18,7 @@ CONST INT g_i_WINDOW_WIDTH = g_i_DISPLAY_WIDTH + g_i_START_X * 2+16;
 CONST INT g_i_WINDOW_HEIGHT = g_i_DISPLAY_HEIGHT + g_i_START_Y * 2 + (g_i_BUTTON_SIZE + g_i_INTERVAL) * 4+42;
 
 CONST CHAR* g_sz_arr_OPERATIONS[] = {"+","-","*","/"};
+CONST CHAR* g_sz_arr_DIGITMAPS[] = { "button_1", "button_2", "button_3", "button_4", "button_5", "button_6", "button_7", "button_8", "button_9" };
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -79,6 +80,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 		DispatchMessage(&msg);
 	}
 	return msg.wParam;
+
 }
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
@@ -94,6 +96,12 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
+		HFONT hFont;
+
+		LOGFONT LF = { -22, 0, 0, 0, FW_HEAVY, 0, 0, 0, RUSSIAN_CHARSET,
+		   OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, 0, "Microsoft Sans Serif" };
+		hFont = CreateFontIndirect(&LF);
+
 		HWND hEdit = CreateWindowEx
 		(
 			NULL, "Edit", "",
@@ -105,16 +113,19 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetModuleHandle(NULL),
 			NULL
 		);
+
+		SendDlgItemMessage(hwnd, IDC_EDIT, WM_SETFONT, (WPARAM)hFont, MAKELPARAM(TRUE, 0));
+
 		for (int i = 6; i >= 0; i-=3)
 		{
 			for(int j = 0; j < 3; j++)
 			{ 
 				CHAR sz_digit[2] = "";
 				sz_digit[0] = i + j + 49;
-				CreateWindowEx
+				HWND button1 = CreateWindowEx
 				(
 					NULL, "Button", sz_digit,
-					WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+					WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP,
 					g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*j,//X Position
 					g_i_BUTTON_START_Y+(g_i_BUTTON_SIZE+g_i_INTERVAL)*(3-i/3-1),//Y Position
 					g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
@@ -123,12 +134,14 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					GetModuleHandle(NULL),
 					NULL
 				);
+				HANDLE hImg = LoadImageW(NULL, (LPCWSTR)g_sz_arr_DIGITMAPS[i+j], IMAGE_BITMAP, g_i_BUTTON_SIZE, g_i_BUTTON_SIZE, LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE);
+				SendMessageW(button1, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hImg);
 			}
 		}
-		CreateWindowEx
+		HWND button0=CreateWindowEx
 		(
 			NULL, "Button", "0",
-			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP,
 			g_i_BUTTON_START_X,
 			g_i_BUTTON_START_Y + (g_i_INTERVAL + g_i_BUTTON_SIZE) * 3,
 			g_i_BUTTON_DOUBLE_SIZE, g_i_BUTTON_SIZE,
@@ -137,6 +150,8 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetModuleHandle(NULL),
 			NULL
 		);
+		HANDLE hImg = LoadImageW(NULL, L"button_0.bmp", IMAGE_BITMAP, g_i_BUTTON_DOUBLE_SIZE, g_i_BUTTON_SIZE, LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_LOADFROMFILE);
+		SendMessageW(button0, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hImg);
 		CreateWindowEx
 		(
 			NULL, "Button", ".",
