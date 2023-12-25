@@ -20,7 +20,7 @@ CONST INT g_i_WINDOW_HEIGHT = g_i_DISPLAY_HEIGHT + g_i_START_Y * 2 + (g_i_BUTTON
 CONST CHAR* g_sz_arr_OPERATIONS[] = {"+","-","*","/"};
 
 //список файлов изображений цифр
-CONST wchar_t* g_sz_arr_DIGITMAPS[] = { L"button_1.bmp", L"button_2.bmp", L"button_3.bmp", L"button_4.bmp", L"button_5.bmp", L"button_6.bmp", L"button_7.bmp", L"button_8.bmp", L"button_9.bmp" };
+//CONST wchar_t* g_sz_arr_DIGITMAPS[] = { L"button_1.bmp", L"button_2.bmp", L"button_3.bmp", L"button_4.bmp", L"button_5.bmp", L"button_6.bmp", L"button_7.bmp", L"button_8.bmp", L"button_9.bmp" };
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID SetSkin(HWND hwnd, CONST CHAR skin[]);
@@ -96,7 +96,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static BOOL operation_input = FALSE;
 	static BOOL in_default_state = TRUE;
 
-	static CHAR sz_skin[FILENAME_MAX] = "square_blue";
+	static CHAR sz_skin[FILENAME_MAX] = "square_green";
 	switch (uMsg)
 	{
 	case WM_CREATE:
@@ -171,7 +171,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		CreateWindowEx
 		(
 			NULL, "Button", ".",
-			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP,
 			g_i_BUTTON_START_X+g_i_BUTTON_DOUBLE_SIZE+g_i_INTERVAL,
 			g_i_BUTTON_START_Y + (g_i_INTERVAL + g_i_BUTTON_SIZE) * 3,
 			g_i_BUTTON_SIZE, g_i_BUTTON_SIZE,
@@ -188,7 +188,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				NULL,
 				"Button",
 				g_sz_arr_OPERATIONS[3-i],
-				WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+				WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP,
 				g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*3,
 				g_i_BUTTON_START_Y+(g_i_BUTTON_SIZE+g_i_INTERVAL)*i,
 				g_i_BUTTON_SIZE,
@@ -204,7 +204,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			NULL,
 			"Button",
 			"<-",
-			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP,
 			g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*4,
 			g_i_BUTTON_START_Y,
 			g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
@@ -218,7 +218,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			NULL,
 			"Button",
 			"C",
-			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP,
 			g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*4,
 			g_i_BUTTON_START_Y+ g_i_BUTTON_SIZE + g_i_INTERVAL,
 			g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
@@ -232,7 +232,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			NULL,
 			"Button",
 			"=",
-			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP,
 			g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*4,
 			g_i_BUTTON_START_Y + (g_i_BUTTON_SIZE + g_i_INTERVAL)*2,
 			g_i_BUTTON_SIZE,g_i_BUTTON_DOUBLE_SIZE,
@@ -321,11 +321,15 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
 		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_GREEN, "Square green");
 		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_BLUE, "Square blue");
+		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_BLUE, "Round blue");
+		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_GREEN, "Round green");
 	
 		switch (TrackPopupMenuEx(hMenu,TPM_BOTTOMALIGN|TPM_LEFTALIGN|TPM_RETURNCMD,LOWORD(lParam), HIWORD(lParam), hwnd, NULL))
 		{
 		case CM_SQUARE_BLUE:	strcpy(sz_skin, "square_blue");	break;
 		case CM_SQUARE_GREEN:	strcpy(sz_skin, "square_green");break;
+		case CM_ROUND_BLUE: strcpy(sz_skin, "round_blue");	break;
+		case CM_ROUND_GREEN: strcpy(sz_skin, "round_green");	break;
 		case CM_EXIT: DestroyWindow(hwnd);
 		}
 		SetSkin(hwnd, sz_skin);
@@ -341,7 +345,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID SetSkin(HWND hwnd, CONST CHAR skin[])
 {
 	CHAR filename[FILENAME_MAX]{};
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 18; i++)
 	{
 		sprintf(filename, "ButtonsBMP\\%s\\button_%i.bmp",skin,i);
 		HWND hButton = GetDlgItem(hwnd, IDC_BUTTON_0 + i);
@@ -349,9 +353,11 @@ VOID SetSkin(HWND hwnd, CONST CHAR skin[])
 		(
 			GetModuleHandle(NULL), 
 			filename,IMAGE_BITMAP,
-			i==0?g_i_BUTTON_DOUBLE_SIZE: g_i_BUTTON_SIZE, g_i_BUTTON_SIZE,
+			i==0?g_i_BUTTON_DOUBLE_SIZE: g_i_BUTTON_SIZE, i==15?g_i_BUTTON_DOUBLE_SIZE:g_i_BUTTON_SIZE,
 			LR_LOADFROMFILE
 		);
 		SendMessage(hButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hBitmap);
+		//if(strstr(skin,"round") != NULL) SendMessage(hButton,)
 	}
+
 }
