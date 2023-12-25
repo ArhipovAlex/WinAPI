@@ -2,6 +2,8 @@
 #include<Windows.h>
 #include<iostream>
 #include<stdio.h>
+#include <Uxtheme.h> //for use the theme functions
+#include <Vsstyle.h> //for use the BP_PUSHBUTTON or others const's
 #include"resource.h"
 
 CONST CHAR g_sz_CLASSNAME[] = "MyCacl";
@@ -95,7 +97,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static BOOL input = FALSE;
 	static BOOL operation_input = FALSE;
 	static BOOL in_default_state = TRUE;
-
+	static HWND hButton;
 	static CHAR sz_skin[FILENAME_MAX] = "square_green";
 	switch (uMsg)
 	{
@@ -130,7 +132,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				HWND button1 = CreateWindowEx
 				(
 					NULL, "Button", sz_digit,
-					WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP,
+					WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP|WS_CLIPSIBLINGS,
 					g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*j,//X Position
 					g_i_BUTTON_START_Y+(g_i_BUTTON_SIZE+g_i_INTERVAL)*(3-i/3-1),//Y Position
 					g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
@@ -152,7 +154,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		HWND button0=CreateWindowEx
 		(
 			NULL, "Button", "0",
-			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP,
+			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP | WS_CLIPSIBLINGS,
 			g_i_BUTTON_START_X,
 			g_i_BUTTON_START_Y + (g_i_INTERVAL + g_i_BUTTON_SIZE) * 3,
 			g_i_BUTTON_DOUBLE_SIZE, g_i_BUTTON_SIZE,
@@ -171,7 +173,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		CreateWindowEx
 		(
 			NULL, "Button", ".",
-			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP,
+			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP | WS_CLIPSIBLINGS,
 			g_i_BUTTON_START_X+g_i_BUTTON_DOUBLE_SIZE+g_i_INTERVAL,
 			g_i_BUTTON_START_Y + (g_i_INTERVAL + g_i_BUTTON_SIZE) * 3,
 			g_i_BUTTON_SIZE, g_i_BUTTON_SIZE,
@@ -188,7 +190,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				NULL,
 				"Button",
 				g_sz_arr_OPERATIONS[3-i],
-				WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP,
+				WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP | WS_CLIPSIBLINGS,
 				g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*3,
 				g_i_BUTTON_START_Y+(g_i_BUTTON_SIZE+g_i_INTERVAL)*i,
 				g_i_BUTTON_SIZE,
@@ -204,7 +206,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			NULL,
 			"Button",
 			"<-",
-			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP,
+			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP | WS_CLIPSIBLINGS,
 			g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*4,
 			g_i_BUTTON_START_Y,
 			g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
@@ -218,7 +220,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			NULL,
 			"Button",
 			"C",
-			WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON | BS_BITMAP,
+			WS_CHILD|WS_VISIBLE| BS_OWNERDRAW,
 			g_i_BUTTON_START_X+(g_i_BUTTON_SIZE+g_i_INTERVAL)*4,
 			g_i_BUTTON_START_Y+ g_i_BUTTON_SIZE + g_i_INTERVAL,
 			g_i_BUTTON_SIZE,g_i_BUTTON_SIZE,
@@ -244,6 +246,50 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetSkin(hwnd, "square_blue");
 	}
 		break;
+		/*
+	case WM_DRAWITEM:
+	{
+		//getting the Draw Item structure
+		LPDRAWITEMSTRUCT b;
+		b = (LPDRAWITEMSTRUCT)lParam;
+
+		//Getting the button visual theme(i get the xp style)
+		HTHEME hTheme;
+		hTheme = OpenThemeData(hButton, L"button");
+
+		//translate the LPDRAWITEMSTRUCT->itemState to DrawThemeBackground int id state
+		int c = 0;
+		if (b->itemState & ODS_HOTLIGHT)
+			c = PBS_HOT;
+		else if (b->itemState & ODS_DEFAULT)
+			c = PBS_DEFAULTED;
+		else if (b->itemState & ODS_DISABLED)
+			c = PBS_DISABLED;
+		else if (b->itemState & ODS_SELECTED)
+			c = PBS_PRESSED;
+		else
+			c |= PBS_NORMAL;
+
+		//draw the button with right state
+		//the state is what the button action can draw to us(click,disable and others)
+		DrawThemeBackground(hTheme, b->hDC, BP_PUSHBUTTON, c, &b->rcItem, 0);
+
+		//getting and draw icon
+		SetSkin(hwnd, sz_skin);
+		//HICON hicon;
+		//hicon = LoadIcon(NULL, IDI_EXCLAMATION);
+		//DrawIcon(b->hDC, 3, 0, hicon);
+
+		//before show the text, i need put it transparent(hide the text backcolor)
+		SetBkMode(b->hDC, TRANSPARENT);
+
+		//i can draw the text with prefix('&')
+		//the DT_EXPANDTABS is for show us the '\t' and others
+		DrawText(b->hDC, "&hello", -1, &b->rcItem, DT_EXPANDTABS | DT_CENTER);
+		return 0;
+	}
+		break;
+	*/
 	case WM_COMMAND:
 	{
 		HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
@@ -347,17 +393,26 @@ VOID SetSkin(HWND hwnd, CONST CHAR skin[])
 	CHAR filename[FILENAME_MAX]{};
 	for (int i = 0; i < 18; i++)
 	{
-		sprintf(filename, "ButtonsBMP\\%s\\button_%i.bmp",skin,i);
+		sprintf(filename, "ButtonsBMP\\%s\\button_%i.bmp", skin, i);
 		HWND hButton = GetDlgItem(hwnd, IDC_BUTTON_0 + i);
 		HBITMAP hBitmap = (HBITMAP)LoadImage
 		(
-			GetModuleHandle(NULL), 
-			filename,IMAGE_BITMAP,
-			i==0?g_i_BUTTON_DOUBLE_SIZE: g_i_BUTTON_SIZE, i==15?g_i_BUTTON_DOUBLE_SIZE:g_i_BUTTON_SIZE,
+			GetModuleHandle(NULL),
+			filename, IMAGE_BITMAP,
+			i == 0 ? g_i_BUTTON_DOUBLE_SIZE : g_i_BUTTON_SIZE, i == 15 ? g_i_BUTTON_DOUBLE_SIZE : g_i_BUTTON_SIZE,
 			LR_LOADFROMFILE
 		);
+		SendMessage(hButton, WM_DRAWITEM, NULL, NULL);
 		SendMessage(hButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hBitmap);
-		//if(strstr(skin,"round") != NULL) SendMessage(hButton,)
+		/*
+		if (strstr(skin, "round") != NULL)
+		{
+			DRAWITEMSTRUCT roundButton
+			(
+
+			)
+			
+		}*/
 	}
 
 }
