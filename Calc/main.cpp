@@ -362,13 +362,19 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_CONTEXTMENU:
 	{
+		//https://stackoverflow.com/questions/65286191/how-to-identify-appendmenu-mf-popup-menu-in-the-windowprocedure
 		HMENU hMenu = CreatePopupMenu();
+		HMENU hDisplayMenu = CreatePopupMenu();
 		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_EXIT, "Exit");
 		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_GREEN, "Square green");
-		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_BLUE, "Square blue");
-		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_BLUE, "Round blue");
-		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_GREEN, "Round green");
+		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_POPUP, (UINT_PTR)hDisplayMenu, "Skins");
+		AppendMenu(hDisplayMenu, MF_STRING, CM_SQUARE_GREEN, "Square green");
+		AppendMenu(hDisplayMenu, MF_STRING, CM_SQUARE_BLUE, "Square blue");
+		AppendMenu(hDisplayMenu, MF_STRING, CM_ROUND_BLUE, "Round blue");
+		AppendMenu(hDisplayMenu, MF_STRING, CM_ROUND_GREEN, "Round green");
+		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_BLUE, "Square blue");
+		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_BLUE, "Round blue");
+		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_GREEN, "Round green");
 	
 		switch (TrackPopupMenuEx(hMenu,TPM_BOTTOMALIGN|TPM_LEFTALIGN|TPM_RETURNCMD,LOWORD(lParam), HIWORD(lParam), hwnd, NULL))
 		{
