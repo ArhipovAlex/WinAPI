@@ -13,13 +13,19 @@ CONST INT g_i_INTERVAL = 5;
 CONST INT g_i_BUTTON_SIZE = 50;
 CONST INT g_i_BUTTON_DOUBLE_SIZE = g_i_BUTTON_SIZE * 2 + g_i_INTERVAL;
 CONST INT g_i_DISPLAY_WIDTH = (g_i_BUTTON_SIZE + g_i_INTERVAL)*5-g_i_INTERVAL;
-CONST INT g_i_DISPLAY_HEIGHT = g_i_BUTTON_SIZE/2;
+CONST INT g_i_DISPLAY_HEIGHT = g_i_BUTTON_SIZE;
 CONST INT g_i_BUTTON_START_X = g_i_START_X;
 CONST INT g_i_BUTTON_START_Y = g_i_START_Y+g_i_DISPLAY_HEIGHT + g_i_INTERVAL;
 CONST INT g_i_WINDOW_WIDTH = g_i_DISPLAY_WIDTH + g_i_START_X * 2+16;
 CONST INT g_i_WINDOW_HEIGHT = g_i_DISPLAY_HEIGHT + g_i_START_Y * 2 + (g_i_BUTTON_SIZE + g_i_INTERVAL) * 4+42;
 
 CONST CHAR* g_sz_arr_OPERATIONS[] = {"+","-","*","/"};
+
+CONST COLORREF g_clr_COLORS[][3] =
+{
+	{RGB(0,0,100),RGB(0,0,255),RGB(255,0,0)},
+	{RGB(0,100,0),RGB(0,255,0),RGB(0,255,0)},
+};
 
 //список файлов изображений цифр
 //CONST wchar_t* g_sz_arr_DIGITMAPS[] = { L"button_1.bmp", L"button_2.bmp", L"button_3.bmp", L"button_4.bmp", L"button_5.bmp", L"button_6.bmp", L"button_7.bmp", L"button_8.bmp", L"button_9.bmp" };
@@ -98,19 +104,18 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static BOOL operation_input = FALSE;
 	static BOOL in_default_state = TRUE;
 	static HWND hButton;
+	
 	static CHAR sz_skin[FILENAME_MAX] = "square_green";
+	//цвета для фона и Edit
+	//static COLORREF clrDisplayBackground = RGB(0, 0, 100);
+	//static COLORREF clrWindowBackground = RGB(0, 0, 255);
+	//static COLORREF clrDisplayFont = RGB(255,0,0);
+	static UINT colorref = 0;
+
 	switch (uMsg)
 	{
 	case WM_CREATE:
 	{
-		/*
-		//объект настройки шрифта
-		HFONT hFont;
-		LOGFONT LF = { g_i_DISPLAY_HEIGHT, 0, 0, 0, FW_HEAVY, 0, 0, 0, RUSSIAN_CHARSET,
-		   OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, 0, "Microsoft Sans Serif" };
-		hFont = CreateFontIndirect(&LF);
-		*/
-
 		HWND hEdit = CreateWindowEx
 		(
 			NULL, "Edit", "",
@@ -122,7 +127,9 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetModuleHandle(NULL),
 			NULL
 		);
-		//установка шрифта для объекта
+		//подключение файла шрифта
+		AddFontResourceEx("fonts\\digital-7.ttf",FR_PRIVATE,0);
+		//создание шрифта
 		HFONT hFont = CreateFont
 		(
 			g_i_DISPLAY_HEIGHT-2, g_i_DISPLAY_HEIGHT/3,
@@ -135,8 +142,9 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			CLIP_DEFAULT_PRECIS,
 			ANTIALIASED_QUALITY,
 			FF_DONTCARE,
-			"Tahoma"
+			"digital-7"
 		);
+		//подключение созданного шрифта
 		SendDlgItemMessage(hwnd, IDC_EDIT, WM_SETFONT, (WPARAM)hFont, MAKELPARAM(TRUE, 0));
 
 		//Digits
@@ -307,6 +315,21 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 		break;
 	*/
+		//Установка цвета в Edit
+	case WM_CTLCOLOREDIT:
+	{
+		HDC hdc = (HDC)wParam;
+		SetBkMode(hdc, OPAQUE);
+		//SetBkColor(hdc, clrDisplayBackground);
+		//HBRUSH hBrush = CreateSolidBrush(clrWindowBackground);
+		//SetTextColor(hdc, clrDisplayFont);
+		SetBkColor(hdc, g_clr_COLORS[colorref][0]);
+		HBRUSH hBrush = CreateSolidBrush(g_clr_COLORS[colorref][1]);
+		SetTextColor(hdc, g_clr_COLORS[colorref][2]);
+		SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)hBrush);
+		return(LRESULT)hBrush;
+	}
+		break;
 	case WM_COMMAND:
 	{
 		HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
@@ -379,6 +402,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_CONTEXTMENU:
 	{
+		
 		//https://stackoverflow.com/questions/65286191/how-to-identify-appendmenu-mf-popup-menu-in-the-windowprocedure
 		HMENU hMenu = CreatePopupMenu();
 		HMENU hDisplayMenu = CreatePopupMenu();
@@ -392,16 +416,24 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_BLUE, "Square blue");
 		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_BLUE, "Round blue");
 		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_GREEN, "Round green");
-	
-		switch (TrackPopupMenuEx(hMenu,TPM_BOTTOMALIGN|TPM_LEFTALIGN|TPM_RETURNCMD,LOWORD(lParam), HIWORD(lParam), hwnd, NULL))
+		BOOL item = TrackPopupMenuEx(hMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN | TPM_RETURNCMD, LOWORD(lParam), HIWORD(lParam), hwnd, NULL);
+		switch (item)
 		{
-		case CM_SQUARE_BLUE:	strcpy(sz_skin, "square_blue");	break;
-		case CM_SQUARE_GREEN:	strcpy(sz_skin, "square_green");break;
-		case CM_ROUND_BLUE: strcpy(sz_skin, "round_blue");	break;
-		case CM_ROUND_GREEN: strcpy(sz_skin, "round_green");	break;
+		case CM_SQUARE_BLUE: strcpy(sz_skin, "square_blue"); colorref = item - 201;
+			break;
+		case CM_SQUARE_GREEN:strcpy(sz_skin, "square_green"); colorref = item - 201;
+			break;
+		case CM_ROUND_BLUE: strcpy(sz_skin, "round_blue");	colorref = item - 201;
+			break;
+		case CM_ROUND_GREEN:strcpy(sz_skin, "round_green");	colorref = item - 201;
+			break;
 		case CM_EXIT: DestroyWindow(hwnd);
 		}
 		SetSkin(hwnd, sz_skin);
+		HDC hdc = GetDC(hwnd);
+		SendMessage(hwnd, WM_CTLCOLOREDIT, (WPARAM)hdc, 0);
+		ReleaseDC(hwnd, hdc);
+		
 	}
 		break;
 	case WM_KEYDOWN:
@@ -452,15 +484,6 @@ VOID SetSkin(HWND hwnd, CONST CHAR skin[])
 		);
 		SendMessage(hButton, WM_DRAWITEM, NULL, NULL);
 		SendMessage(hButton, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)hBitmap);
-		/*
-		if (strstr(skin, "round") != NULL)
-		{
-			DRAWITEMSTRUCT roundButton
-			(
-
-			)
-			
-		}*/
 	}
 
 }
