@@ -13,7 +13,7 @@ CONST INT g_i_INTERVAL = 5;
 CONST INT g_i_BUTTON_SIZE = 50;
 CONST INT g_i_BUTTON_DOUBLE_SIZE = g_i_BUTTON_SIZE * 2 + g_i_INTERVAL;
 CONST INT g_i_DISPLAY_WIDTH = (g_i_BUTTON_SIZE + g_i_INTERVAL)*5-g_i_INTERVAL;
-CONST INT g_i_DISPLAY_HEIGHT = 22;
+CONST INT g_i_DISPLAY_HEIGHT = g_i_BUTTON_SIZE/2;
 CONST INT g_i_BUTTON_START_X = g_i_START_X;
 CONST INT g_i_BUTTON_START_Y = g_i_START_Y+g_i_DISPLAY_HEIGHT + g_i_INTERVAL;
 CONST INT g_i_WINDOW_WIDTH = g_i_DISPLAY_WIDTH + g_i_START_X * 2+16;
@@ -103,11 +103,13 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
+		/*
 		//объект настройки шрифта
 		HFONT hFont;
 		LOGFONT LF = { g_i_DISPLAY_HEIGHT, 0, 0, 0, FW_HEAVY, 0, 0, 0, RUSSIAN_CHARSET,
 		   OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY, 0, "Microsoft Sans Serif" };
 		hFont = CreateFontIndirect(&LF);
+		*/
 
 		HWND hEdit = CreateWindowEx
 		(
@@ -121,8 +123,23 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			NULL
 		);
 		//установка шрифта для объекта
+		HFONT hFont = CreateFont
+		(
+			g_i_DISPLAY_HEIGHT-2, g_i_DISPLAY_HEIGHT/3,
+			0, //Escapement
+			0, //Orientation
+			FW_BOLD, //Weight
+			FALSE,FALSE,FALSE,//Italic, Underline, Strikeout
+			DEFAULT_CHARSET,
+			OUT_TT_PRECIS,
+			CLIP_DEFAULT_PRECIS,
+			ANTIALIASED_QUALITY,
+			FF_DONTCARE,
+			"Tahoma"
+		);
 		SendDlgItemMessage(hwnd, IDC_EDIT, WM_SETFONT, (WPARAM)hFont, MAKELPARAM(TRUE, 0));
 
+		//Digits
 		for (int i = 6; i >= 0; i-=3)
 		{
 			for(int j = 0; j < 3; j++)
@@ -385,6 +402,31 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case CM_EXIT: DestroyWindow(hwnd);
 		}
 		SetSkin(hwnd, sz_skin);
+	}
+		break;
+	case WM_KEYDOWN:
+	{
+		if (GetKeyState(VK_SHIFT) < 0 && wParam == 0x38)
+			SendMessage(hwnd, WM_COMMAND,IDC_BUTTON_ASTER,0);
+		else if (wParam >= 0x30 && wParam <= 0x39)
+			SendMessage(hwnd, WM_COMMAND, LOWORD(wParam - 0x30 + 1000), 0);
+		if (wParam >= 0x60 && wParam <= 0x69)
+			SendMessage(hwnd, WM_COMMAND, LOWORD(wParam - 0x60 + 1000), 0);
+		switch (wParam)
+		{
+		//https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+		case VK_ADD: case VK_OEM_PLUS:
+			SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_PLUS), 0); break;
+		case VK_SUBTRACT: case VK_OEM_MINUS:
+			SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_MINUS), 0); break;
+		case VK_MULTIPLY:SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_ASTER), 0); break;
+		case VK_DIVIDE:case VK_OEM_2:
+			SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_SLASH), 0); break;
+		case VK_OEM_PERIOD:SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_POINT), 0); break;
+		case VK_RETURN:SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_EQUAR), 0); break;
+		case VK_ESCAPE:SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_CLEAR), 0); break;
+		case VK_BACK:SendMessage(hwnd, WM_COMMAND, LOWORD(IDC_BUTTON_BSP), 0); break;
+		}
 	}
 		break;
 	case WM_DESTROY:PostQuitMessage(0); break;
