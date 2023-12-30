@@ -1,4 +1,4 @@
-#define _WIN32_WINNT 0x0500
+п»ї#define _WIN32_WINNT 0x0500
 #include <Windows.h>
 #include <winuser.h>
 #include <GdiPlus.h>
@@ -27,6 +27,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hbrBackground = CreateSolidBrush(RGB(0,0xc8,0xc8));
     wc.lpszMenuName = NULL;
     wc.lpszClassName = g_szClassName;
     wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
@@ -45,7 +46,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         "Round Button",
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        300, 150, NULL, NULL, hInstance, NULL);
+        800, 640, NULL, NULL, hInstance, NULL);
     if (hwnd == NULL)
     {
         MessageBox(NULL, "Window Creation Failed!", "Error!",
@@ -76,10 +77,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
-        //размеры кнопки желательно чтобы совпадали с размером вставляемой текстуры (173х173) иначе недорисует
+        //СЂР°Р·РјРµСЂС‹ РєРЅРѕРїРєРё Р¶РµР»Р°С‚РµР»СЊРЅРѕ С‡С‚РѕР±С‹ СЃРѕРІРїР°РґР°Р»Рё СЃ СЂР°Р·РјРµСЂРѕРј РІСЃС‚Р°РІР»СЏРµРјРѕР№ С‚РµРєСЃС‚СѓСЂС‹ (173С…173) РёРЅР°С‡Рµ РЅРµРґРѕСЂРёСЃСѓРµС‚
         hwndButton = CreateWindow("button", "", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
-            10, 10, 50, 50, hwnd, (HMENU)BUTTON, hInst, NULL);
-        HRGN hrgn = CreateEllipticRgn(0, 0, 50, 50);
+            10, 10, 173, 173, hwnd, (HMENU)BUTTON, hInst, NULL);
+        HRGN hrgn = CreateEllipticRgn(0, 0, 173, 173);
         SetWindowRgn(hwndButton, hrgn, TRUE);
     }
     break;
@@ -96,7 +97,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             RECT& rec = pdis->rcItem;
             RectF rect(rec.left, rec.top, rec.right - 1, rec.bottom - 1);
             Brush* brush = new SolidBrush(Color::Green);
-            //для заполнения кнопки используется текстура, как подогнать по размерам кнопки текстуру???
+            //РґР»СЏ Р·Р°РїРѕР»РЅРµРЅРёСЏ РєРЅРѕРїРєРё РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ С‚РµРєСЃС‚СѓСЂР°, РєР°Рє РїРѕРґРѕРіРЅР°С‚СЊ РїРѕ СЂР°Р·РјРµСЂР°Рј РєРЅРѕРїРєРё С‚РµРєСЃС‚СѓСЂСѓ???
             Image image(L"button_1.bmp");
             TextureBrush tBrush(&image);
             graphics.FillEllipse(&tBrush, rect);
