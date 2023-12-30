@@ -1,9 +1,13 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
+#define _WIN32_WINNT 0x0500
 #include<Windows.h>
 #include<iostream>
 #include<stdio.h>
 #include <Uxtheme.h> //for use the theme functions
 #include <Vsstyle.h> //for use the BP_PUSHBUTTON or others const's
+#include <winuser.h>
+#include <GdiPlus.h>
+#pragma comment(lib, "gdiplus.lib")
 #include"resource.h"
 
 CONST CHAR g_sz_CLASSNAME[] = "MyCacl";
@@ -23,8 +27,10 @@ CONST CHAR* g_sz_arr_OPERATIONS[] = {"+","-","*","/"};
 
 CONST COLORREF g_clr_COLORS[][3] =
 {
-	{RGB(0,0,100),RGB(0,0,255),RGB(255,0,0)},
-	{RGB(0,100,0),RGB(0,255,0),RGB(0,255,0)},
+	{RGB(0,0,100),RGB(0,0,255),RGB(255,0,0)},//цвет для SQUARE_BLUE
+	{RGB(0,100,100),RGB(0,255,0),RGB(0,255,0)},//цвет для SQUARE_GREEN
+	{RGB(0,0,100),RGB(0,0,255),RGB(255,0,0)},//цвет для ROUND_BLUE
+	{RGB(0,100,100),RGB(0,255,0),RGB(0,255,0)}//цвет для ROUND_GREEN
 };
 
 //список файлов изображений цифр
@@ -49,7 +55,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	wc.hIconSm = (HICON)LoadImage(hInstance, "calc.ico", IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);
 	wc.hCursor = LoadCursor(hInstance, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
-
+	wc.hbrBackground = CreateSolidBrush(RGB(0, 0xc8, 0xc8));
 	wc.hInstance = hInstance;
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = g_sz_CLASSNAME;
@@ -315,6 +321,28 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 		break;
 	*/
+
+	case WM_DRAWITEM:
+	{
+		DRAWITEMSTRUCT* dwi = (DRAWITEMSTRUCT*)lParam;
+		switch (dwi->CtlID)
+		{
+		case IDC_BUTTON_CLEAR:
+		{
+			RECT& btnClear = dwi->rcItem;
+			//btnClear.left = g_i_BUTTON_START_X + (g_i_BUTTON_SIZE + g_i_INTERVAL) * 4;
+			btnClear.left = 0;
+			//btnClear.top = g_i_BUTTON_START_Y + g_i_BUTTON_SIZE + g_i_INTERVAL;
+			btnClear.top = 0;
+			btnClear.right = g_i_BUTTON_SIZE;
+			btnClear.bottom = g_i_BUTTON_SIZE;
+			FillRect(dwi->hDC, &btnClear, CreateSolidBrush(RGB(0, 0xc8, 0xc8)));
+
+		}
+			break;
+		}
+	}
+		break;
 		//Установка цвета в Edit
 	case WM_CTLCOLOREDIT:
 	{
@@ -327,6 +355,9 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		HBRUSH hBrush = CreateSolidBrush(g_clr_COLORS[colorref][1]);
 		SetTextColor(hdc, g_clr_COLORS[colorref][2]);
 		SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)hBrush);
+		
+
+		HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
 		return(LRESULT)hBrush;
 	}
 		break;
@@ -409,23 +440,24 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_EXIT, "Exit");
 		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
 		InsertMenu(hMenu, 0, MF_BYPOSITION | MF_POPUP, (UINT_PTR)hDisplayMenu, "Skins");
-		AppendMenu(hDisplayMenu, MF_STRING, CM_SQUARE_GREEN, "Square green");
-		AppendMenu(hDisplayMenu, MF_STRING, CM_SQUARE_BLUE, "Square blue");
-		AppendMenu(hDisplayMenu, MF_STRING, CM_ROUND_BLUE, "Round blue");
-		AppendMenu(hDisplayMenu, MF_STRING, CM_ROUND_GREEN, "Round green");
-		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_BLUE, "Square blue");
-		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_BLUE, "Round blue");
-		//InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_GREEN, "Round green");
+		//AppendMenu(hDisplayMenu, MF_STRING, CM_SQUARE_GREEN, "Square green");
+		//AppendMenu(hDisplayMenu, MF_STRING, CM_SQUARE_BLUE, "Square blue");
+		//AppendMenu(hDisplayMenu, MF_STRING, CM_ROUND_BLUE, "Round blue");
+		//AppendMenu(hDisplayMenu, MF_STRING, CM_ROUND_GREEN, "Round green");
+		InsertMenu(hDisplayMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_BLUE, "Square blue");
+		InsertMenu(hDisplayMenu, 0, MF_BYPOSITION | MF_STRING, CM_SQUARE_GREEN, "Square green");
+		InsertMenu(hDisplayMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_BLUE, "Round blue");
+		InsertMenu(hDisplayMenu, 0, MF_BYPOSITION | MF_STRING, CM_ROUND_GREEN, "Round green");
 		BOOL item = TrackPopupMenuEx(hMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN | TPM_RETURNCMD, LOWORD(lParam), HIWORD(lParam), hwnd, NULL);
 		switch (item)
 		{
-		case CM_SQUARE_BLUE: strcpy(sz_skin, "square_blue"); colorref = item - 201;
+		case CM_SQUARE_BLUE: strcpy(sz_skin, "square_blue"); colorref = item - 201; SendMessage(GetDlgItem(hwnd, IDC_EDIT), WM_SETTEXT, 0, (LPARAM)sz_display);
 			break;
-		case CM_SQUARE_GREEN:strcpy(sz_skin, "square_green"); colorref = item - 201;
+		case CM_SQUARE_GREEN:strcpy(sz_skin, "square_green"); colorref = item - 201; SendMessage(GetDlgItem(hwnd, IDC_EDIT), WM_SETTEXT, 0, (LPARAM)sz_display);
 			break;
-		case CM_ROUND_BLUE: strcpy(sz_skin, "round_blue");	colorref = item - 201;
+		case CM_ROUND_BLUE: strcpy(sz_skin, "round_blue");	colorref = item - 201; SendMessage(GetDlgItem(hwnd, IDC_EDIT), WM_SETTEXT, 0, (LPARAM)sz_display);
 			break;
-		case CM_ROUND_GREEN:strcpy(sz_skin, "round_green");	colorref = item - 201;
+		case CM_ROUND_GREEN:strcpy(sz_skin, "round_green");	colorref = item - 201; SendMessage(GetDlgItem(hwnd, IDC_EDIT), WM_SETTEXT, 0, (LPARAM)sz_display);
 			break;
 		case CM_EXIT: DestroyWindow(hwnd);
 		}

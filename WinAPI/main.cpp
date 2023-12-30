@@ -86,22 +86,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
     case WM_DRAWITEM:
     {
-
         pdis = (LPDRAWITEMSTRUCT)lParam;
         Graphics graphics(pdis->hDC);
         graphics.SetSmoothingMode(SmoothingModeHighQuality);
         Pen      pen(Color(255, 0, 0, 255));
-        FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        //FillRect(pdis->hDC, &pdis->rcItem, (HBRUSH)GetStockObject(GRAY_BRUSH));
+        FillRect(pdis->hDC, &pdis->rcItem, CreateSolidBrush(RGB(0, 0xc8, 0xc8)));
         if (pdis->CtlID == BUTTON)
         {
             RECT& rec = pdis->rcItem;
-            RectF rect(rec.left, rec.top, rec.right - 1, rec.bottom - 1);
+            RectF ellipseRect(rec.left, rec.top, rec.right - 1, rec.bottom - 1);
             Brush* brush = new SolidBrush(Color::Green);
             //для заполнения кнопки используется текстура, как подогнать по размерам кнопки текстуру???
             Image image(L"button_1.bmp");
             TextureBrush tBrush(&image);
-            graphics.FillEllipse(&tBrush, rect);
+            graphics.FillEllipse(&tBrush, ellipseRect);
+            
         }
+        
     }break;
     case WM_PAINT:
     {
