@@ -8,6 +8,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT CALLBACK DlgProcAbout(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 BOOL LoadTextFileToEdit(HWND hEdit, LPCSTR lpszFileName);
+BOOL SaveTextFileFromEdit(HWND hEdit, LPCSTR lpszFileName);
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, INT nCmdShow)
 {
@@ -127,6 +128,30 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		break;
+		case ID_FILE_SAVEAS:
+		{
+			
+			CHAR szFileName[MAX_PATH]{};
+
+			OPENFILENAME ofn;
+			ZeroMemory(&ofn, sizeof(ofn));
+
+			ofn.lStructSize = sizeof(ofn);
+			ofn.hwndOwner = hwnd;
+			ofn.lpstrFilter = (LPCSTR)"*.txt";
+			ofn.lpstrFile = szFileName;
+			ofn.nMaxFile = MAX_PATH;
+			ofn.Flags = OFN_PATHMUSTEXIST|OFN_FILEMUSTEXIST;
+			ofn.lpstrDefExt = "txt";
+
+			if (GetSaveFileName(&ofn))
+			{
+				HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+				SaveTextFileFromEdit(hEdit, szFileName);
+			}
+		}
+
+		break;
 		case ID_HELP_ABOUT:
 			DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hwnd, DlgProcAbout, 0);
 		break;
@@ -180,4 +205,23 @@ BOOL LoadTextFileToEdit(HWND hEdit, LPCSTR lpszFileName)
 		}
 	}
 	return bSuccess;
+}
+
+BOOL SaveTextFileFromEdit(HWND hEdit, LPCSTR lpszFileName)
+{
+	HANDLE hFile = CreateFile(lpszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	//узнаем длину текста для считывания
+	int saveLength = GetWindowTextLength(hEdit);
+	//создаем буфер для сохранения текста из окна
+	char* data = new char[saveLength];
+	//заполняем буфер
+	saveLength = GetWindowTextA(hEdit, data, saveLength);
+	//записываем побитово в файл считанный буфер
+	DWORD byteIterated;
+	WriteFile(hFile, data, saveLength, &byteIterated, NULL);
+	//закрываем файл
+	CloseHandle(hFile);
+	//удаляем буфер
+	delete[] data;
+	return TRUE;
 }
