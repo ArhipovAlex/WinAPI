@@ -12,7 +12,7 @@ BOOL SaveTextFileFromEdit(HWND hEdit, LPCSTR lpszFileName);
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, INT nCmdShow)
 {
-//1) Регистрация класса окна
+	//1) Регистрация класса окна
 	WNDCLASSEX wc;
 	ZeroMemory(&wc, sizeof(wc));
 	//стиль окна
@@ -38,7 +38,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 		MessageBox(NULL, "Class registration failed", "Error", MB_OK | MB_ICONERROR);
 		return 0;
 	}
-//2) Создание окна
+	//2) Создание окна
 	HWND hwnd = CreateWindowEx
 	(
 		NULL,
@@ -61,7 +61,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	}
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
-//3) Запуск цикла сообщений
+	//3) Запуск цикла сообщений
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
@@ -73,6 +73,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static CHAR szFileName[MAX_PATH]{};
 	switch (uMsg)
 	{
 	case WM_CREATE:
@@ -82,40 +83,38 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		GetWindowRect(hwnd, &rect);
 		HWND hEdit = CreateWindowEx
 		(
-			NULL,RICHEDIT_CLASS, "",
-			WS_CHILD|WS_VISIBLE|ES_MULTILINE|ES_AUTOHSCROLL|ES_AUTOVSCROLL,
-			0,0,
-			rect.right,rect.bottom,
+			NULL, RICHEDIT_CLASS, "",
+			WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
+			0, 0,
+			rect.right, rect.bottom,
 			hwnd,
 			(HMENU)IDC_EDIT,
 			GetModuleHandle(NULL),
 			NULL
 		);
 	}
-		break;
+	break;
 	case WM_SIZE:
 	{
 		RECT rect;
 		GetClientRect(hwnd, &rect);
-		SetWindowPos(GetDlgItem(hwnd, IDC_EDIT), NULL, rect.left, rect.top, rect.right, rect.bottom,SWP_NOZORDER);
+		SetWindowPos(GetDlgItem(hwnd, IDC_EDIT), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOZORDER);
 	}
-		break;
+	break;
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
 		case ID_FILE_OPEN:
 		{
-			CHAR szFileName[MAX_PATH]{};
-
+			//CHAR szFileName[MAX_PATH]{};
 			OPENFILENAME ofn;
 			ZeroMemory(&ofn, sizeof(ofn));
-
 			ofn.lStructSize = sizeof(ofn);
 			ofn.hwndOwner = hwnd;
 			ofn.lpstrFilter = "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0";
 			ofn.lpstrFile = szFileName;
 			ofn.nMaxFile = MAX_PATH;
-			ofn.Flags = OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_HIDEREADONLY;
+			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 			ofn.lpstrDefExt = "txt";
 
 			if (GetOpenFileName(&ofn))
@@ -128,36 +127,37 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		break;
+		case ID_FILE_SAVE:
+		{
+			if (strlen(szFileName))SaveTextFileFromEdit(GetDlgItem(hwnd, IDC_EDIT), szFileName);
+			else SendMessage(hwnd, WM_COMMAND, ID_FILE_SAVEAS,0);
+		}
+		break;
 		case ID_FILE_SAVEAS:
 		{
-			
-			CHAR szFileName[MAX_PATH]{};
-
+			//CHAR szFileName[MAX_PATH]{};
 			OPENFILENAME ofn;
 			ZeroMemory(&ofn, sizeof(ofn));
-
 			ofn.lStructSize = sizeof(ofn);
 			ofn.hwndOwner = hwnd;
 			ofn.lpstrFilter = (LPCSTR)"*.txt";
 			ofn.lpstrFile = szFileName;
 			ofn.nMaxFile = MAX_PATH;
-			ofn.Flags = OFN_PATHMUSTEXIST|OFN_FILEMUSTEXIST;
+			ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 			ofn.lpstrDefExt = "txt";
-
 			if (GetSaveFileName(&ofn))
 			{
 				HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
 				SaveTextFileFromEdit(hEdit, szFileName);
 			}
 		}
-
 		break;
 		case ID_HELP_ABOUT:
 			DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hwnd, DlgProcAbout, 0);
-		break;
+			break;
 		}
 		break;
-	case WM_DESTROY: PostQuitMessage(0);break;
+	case WM_DESTROY: PostQuitMessage(0); break;
 	case WM_CLOSE:DestroyWindow(hwnd); break;
 	default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
@@ -211,7 +211,7 @@ BOOL SaveTextFileFromEdit(HWND hEdit, LPCSTR lpszFileName)
 {
 	HANDLE hFile = CreateFile(lpszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	//узнаем длину текста для считывания
-	int saveLength = GetWindowTextLength(hEdit);
+	int saveLength = GetWindowTextLength(hEdit) + 1;
 	//создаем буфер для сохранения текста из окна
 	char* data = new char[saveLength];
 	//заполняем буфер
