@@ -74,6 +74,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static CHAR szFileName[MAX_PATH]{};
+	static BOOL onChange;
 	switch (uMsg)
 	{
 	case WM_CREATE:
@@ -92,6 +93,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetModuleHandle(NULL),
 			NULL
 		);
+		onChange = FALSE;
 	}
 	break;
 	case WM_SIZE:
@@ -99,6 +101,11 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		RECT rect;
 		GetClientRect(hwnd, &rect);
 		SetWindowPos(GetDlgItem(hwnd, IDC_EDIT), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOZORDER);
+	}
+	break;
+	case WM_KEYDOWN:
+	{
+		onChange = TRUE;
 	}
 	break;
 	case WM_COMMAND:
@@ -158,7 +165,24 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_DESTROY: PostQuitMessage(0); break;
-	case WM_CLOSE:DestroyWindow(hwnd); break;
+	case WM_CLOSE:
+	{
+		if(onChange)
+		{
+			int message = MessageBox(NULL, "Вы хотите сохранить изменения в файле?", g_sz_CLASS_NAME, MB_YESNOCANCEL | MB_ICONQUESTION);
+			switch (message)
+			{
+			case IDYES:
+				{
+				SendMessage(hwnd, WM_COMMAND, ID_FILE_SAVE, 0);
+				}
+			case IDNO:DestroyWindow(hwnd); break;
+			case IDCANCEL:break;
+			}
+		}
+		DestroyWindow(hwnd);
+	}
+	break;
 	default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	return FALSE;
