@@ -131,6 +131,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				//DWORD dwTextLenght = SendMessage(hEdit, WM_GETTEXTLENGTH, 0, 0);
 				//LPSTR lpszFileContent = (LPSTR)GlobalAlloc(GPTR, dwTextLenght + 1);
 				//SendMessage(hEdit, WM_SETTEXT, 0, (LPARAM)lpszFileContent);
+				onChange = FALSE;
 			}
 		}
 		break;
@@ -169,7 +170,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		if(onChange)
 		{
-			int message = MessageBox(NULL, "Вы хотите сохранить изменения в файле?", g_sz_CLASS_NAME, MB_YESNOCANCEL | MB_ICONQUESTION);
+			int message = MessageBox(NULL, "Вы хотите сохранить изменения в файл?", g_sz_CLASS_NAME, MB_YESNOCANCEL | MB_ICONQUESTION);
 			switch (message)
 			{
 			case IDYES:
@@ -180,7 +181,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			case IDCANCEL:break;
 			}
 		}
-		DestroyWindow(hwnd);
+		else DestroyWindow(hwnd);
 	}
 	break;
 	default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
