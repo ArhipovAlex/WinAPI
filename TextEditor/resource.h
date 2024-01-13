@@ -15,6 +15,8 @@
 #define ID_FORMAT_FONT                  40006
 #define ID_HELP_ABOUT                   40007
 
+#define ID_FILE_SAVE_HK					50004
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
