@@ -1,5 +1,8 @@
-﻿#include<Windows.h>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include<Windows.h>
 #include<Richedit.h>
+#include<stdio.h>
+#include<CommCtrl.h>//доступ к разным классам окон
 #include"resource.h"
 
 //CHAR Buffer[8 * 1024 * 1024];
@@ -10,9 +13,10 @@ INT CALLBACK DlgProcAbout(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 BOOL LoadTextFileToEdit(HWND hEdit, LPCSTR lpszFileName);
 BOOL SaveTextFileFromEdit(HWND hEdit, LPCSTR lpszFileName);
-void LoadFile(HWND hEdit, LPCSTR lpszFileName);
+VOID LoadFile(HWND hEdit, LPCSTR lpszFileName);
 BOOL SavingThisFile(HWND hwnd, BOOL onSave);
 VOID SelectFont(HWND hwnd);
+VOID ChangeStatus(HWND hwnd, HWND hStatus);
 HFONT g_hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 COLORREF g_RGB_Text = RGB(0, 0, 0);
 
@@ -60,6 +64,11 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 		hInstance,
 		NULL
 	);
+	/*
+	HWND hStatusWindow = CreateWindow(STATUSCLASSNAME, L"",
+		WS_CHILD | WS_VISIBLE | WS_BORDER | SBARS_SIZEGRIP | CCS_BOTTOM,
+		0, 0, 0, 0, hwnd, (HMENU)wID, hInstA, NULL);
+	*/
 	if (hwnd == NULL)
 	{
 		MessageBox(NULL, "Window creation failed", "Error", MB_OK | MB_ICONERROR);
@@ -74,6 +83,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
+		ChangeStatus(hwnd, GetDlgItem(hwnd, IDM_STATUS));
 	}
 	return msg.wParam;
 }
@@ -84,10 +94,12 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static CHAR* szFileText = NULL;
 	static BOOL onSave = TRUE;
 	static HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+	static int vStatus = 22;
 	switch (uMsg)
 	{
 	case WM_CREATE:
 	{
+
 		LoadLibrary("riched20.dll");
 		RECT rect;
 		GetWindowRect(hwnd, &rect);
@@ -96,7 +108,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			NULL, RICHEDIT_CLASS, "",
 			WS_CHILD | WS_VISIBLE | ES_MULTILINE |WS_HSCROLL|WS_VSCROLL,
 			0, 0,
-			rect.right, rect.bottom,
+			rect.right, rect.bottom- vStatus,
 			hwnd,
 			(HMENU)IDC_EDIT,
 			GetModuleHandle(NULL),
@@ -116,17 +128,38 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			);
 		SendMessage(hEdit, WM_SETFONT, (WPARAM)g_hFont,TRUE);
 		//регистрируем горячие клавищи с добавлением Ctrl
+		RegisterHotKey(hwnd, ID_FILE_NEW + 10000, MOD_CONTROL, 'N');
 		RegisterHotKey(hwnd, ID_FILE_OPEN + 10000, MOD_CONTROL, 'O');
 		RegisterHotKey(hwnd, ID_FILE_SAVE + 10000, MOD_CONTROL, 'S');
+		RegisterHotKey(hwnd, ID_FILE_SAVEAS + 10000, MOD_CONTROL|MOD_SHIFT, 'S');
+		RegisterHotKey(hwnd, ID_EDIT_UNDO + 10000, MOD_CONTROL, 'Z');
+		RegisterHotKey(hwnd, ID_EDIT_REDO + 10000, MOD_CONTROL, 'Y');
+		//рисование статус-бара
+		INT parts[2] = { 64,-1 };
+		HWND hStatus = CreateWindowEx
+		(
+			NULL,
+			STATUSCLASSNAME,
+			"Status bar",
+			WS_CHILD | WS_VISIBLE,
+			0, 0, 0, 0,
+			hwnd,
+			(HMENU)IDM_STATUS,
+			GetModuleHandle(NULL),
+			NULL
+		);
+		SendMessage(hStatus, SB_SETPARTS, 2, (LPARAM)parts);
 
 		SetFocus(hEdit);
 	}
 	break;
 	case WM_SIZE:
 	{
+		//SendMessage(hStatusWindow, WM_SIZE, 0, 0);
 		RECT rect;
 		GetClientRect(hwnd, &rect);
-		SetWindowPos(GetDlgItem(hwnd, IDC_EDIT), NULL, rect.left, rect.top, rect.right, rect.bottom, SWP_NOZORDER);
+		SetWindowPos(GetDlgItem(hwnd, IDC_EDIT), NULL, rect.left, rect.top, rect.right, rect.bottom - vStatus, SWP_NOZORDER);
+		SetWindowPos(GetDlgItem(hwnd, IDM_STATUS), NULL, 0, 0, 0, 0, SWP_NOMOVE);
 	}
 	break;
 	case WM_DROPFILES://перетаскивание и дроп файлов в окно приложения
@@ -147,6 +180,7 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// Be sure you know that the name is attached to the FULL path of the file.
 			DragQueryFile(hDrop, i, szName, MAX_PATH);
 			LoadTextFileToEdit(GetDlgItem(hwnd, IDC_EDIT), (LPCSTR)szName);
+			ChangeStatus(hwnd, GetDlgItem(hwnd, IDM_STATUS));
 		}
 		// Finally, we destroy the HDROP handle so the extra memory
 		// allocated by the application is released.
@@ -231,6 +265,12 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		break;
+		case ID_EDIT_UNDO:
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT), EM_UNDO, 0, 0L);
+			break;
+		case ID_EDIT_REDO:
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT), EM_REDO, 0, 0L);
+			break;
 		case ID_FORMAT_FONT:SelectFont(hwnd); break;
 		case ID_HELP_ABOUT:
 			DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hwnd, DlgProcAbout, 0);
@@ -241,8 +281,12 @@ INT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (wParam)
 		{
+		case ID_FILE_NEW+10000: 
 		case ID_FILE_OPEN+10000: 
 		case ID_FILE_SAVE+10000: 
+		case ID_FILE_SAVEAS+10000: 
+		case ID_EDIT_UNDO+10000: 
+		case ID_EDIT_REDO+10000: 
 			SendMessage(hwnd, WM_COMMAND, LOWORD(wParam-10000), 0);
 			break;
 		}
@@ -390,8 +434,18 @@ VOID SelectFont(HWND hwnd)
 	SendMessage(hwnd, WM_CTLCOLOREDIT, (WPARAM)hdc, (LPARAM)hEdit);
 	ReleaseDC(hEdit, hdc);
 }
+//обновление статуса
+VOID ChangeStatus(HWND hwnd, HWND hStatus)
+{
+	HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
+	int CountLines = SendMessage(hEdit, EM_GETLINECOUNT, 0, 0);
+	int CountChars = GetWindowTextLength(hEdit)-((CountLines-1)*2);
+	CHAR sz_status[256]{};
+	sprintf(sz_status, "Characters: %i Lines: %i", CountChars, CountLines);
+	SendMessage(GetDlgItem(hwnd, IDM_STATUS), SB_SETTEXT, 1, (LPARAM)sz_status);
+}
 
-void LoadFile(HWND hEdit, LPCSTR lpszFileName)
+VOID LoadFile(HWND hEdit, LPCSTR lpszFileName)
 {
 	BYTE BUFFERSIZE = 8 * 1024 * 1024;
 	// объявление переменной для получения указателя на выделенную память
